@@ -1,0 +1,24 @@
+import { Pool } from 'pg';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from '@prisma/client';
+
+const connectionString = process.env.POSTGRES_URL || process.env.DATABASE_URL || '';
+
+const prismaClientSingleton = () => {
+  const pool = new Pool({ 
+    connectionString,
+    ssl: {
+      rejectUnauthorized: false
+    }
+  });
+  const adapter = new PrismaPg(pool);
+  return new PrismaClient({ adapter });
+};
+
+declare global {
+  var prisma: undefined | ReturnType<typeof prismaClientSingleton>;
+}
+
+export const prisma = globalThis.prisma ?? prismaClientSingleton();
+
+if (process.env.NODE_ENV !== 'production') globalThis.prisma = prisma;

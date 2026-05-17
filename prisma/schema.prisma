@@ -1,0 +1,148 @@
+generator client {
+  provider = "prisma-client-js"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Usuario {
+  id           String        @id @default(uuid())
+  nome         String
+  email        String        @unique
+  senha        String
+  avatar       String?
+  telefone     String?
+  bio          String?
+  createdAt    DateTime      @default(now())
+  inscricoes   Inscricao[]
+  notificacoes Notificacao[]
+  avaliacoes   Avaliacao[]
+}
+
+model Evento {
+  id               String          @id @default(uuid())
+  nome             String
+  tipo             String
+  area             String
+  formato          String
+  descricao        String
+  banner           String?
+  atividades       String?  
+  equipe           String?
+  dataInicio       DateTime        @default(now())
+  dataTermino      DateTime        @default(now())
+  localizacao      String
+  endereco         String?
+  horarioInicio    String?
+  horarioFim       String?
+  certificado      Boolean         @default(false)
+  pago             Boolean         @default(false)
+  valor            Float?
+  vagas            Int?
+  abertura         DateTime        @default(now())
+  encerramento     DateTime        @default(now())
+  status           String          @default("publicado")
+  criadorId        String?
+  inscricoes       Inscricao[]
+  programacoes     Programacao[]
+  missoes          Missao[]
+  notificacoes     Notificacao[]
+  tiposIngresso    TipoIngresso[]
+  organizadores    Organizador[]
+  avaliacoes       Avaliacao[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now()) @updatedAt
+}
+
+model Inscricao {
+  id         String   @id @default(uuid())
+  usuarioId  String
+  eventoId   String
+  createdAt  DateTime @default(now())
+  usuario    Usuario  @relation(fields: [usuarioId], references: [id])
+  evento     Evento   @relation(fields: [eventoId], references: [id])
+  progressos MissaoProgresso[]
+
+  @@unique([usuarioId, eventoId])
+}
+
+model Programacao {
+  id        String   @id @default(uuid())
+  eventoId  String
+  dia       DateTime
+  titulo    String
+  horario   String
+  evento    Evento   @relation(fields: [eventoId], references: [id])
+}
+
+model Missao {
+  id          String   @id @default(uuid())
+  eventoId    String
+  titulo      String
+  descricao   String?
+  pontos      Int      @default(10)
+  meta        Int      @default(1)
+  icone       String?
+  evento      Evento   @relation(fields: [eventoId], references: [id])
+  progressos  MissaoProgresso[]
+}
+
+model MissaoProgresso {
+  id          String    @id @default(uuid())
+  inscricaoId String
+  missaoId    String
+  progresso   Int       @default(0)
+  concluida   Boolean   @default(false)
+  inscricao   Inscricao @relation(fields: [inscricaoId], references: [id])
+  missao      Missao    @relation(fields: [missaoId], references: [id])
+
+  @@unique([inscricaoId, missaoId])
+}
+
+model Notificacao {
+  id        String   @id @default(uuid())
+  usuarioId String
+  tipo      String
+  titulo    String
+  mensagem  String
+  lida      Boolean  @default(false)
+  eventoId  String?
+  createdAt DateTime @default(now())
+  
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id])
+  evento    Evento?  @relation(fields: [eventoId], references: [id])
+}
+
+model TipoIngresso {
+  id         String  @id @default(uuid())
+  eventoId   String
+  nome       String
+  preco      Float
+  quantidade Int?
+  evento     Evento  @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+}
+
+model Organizador {
+  id       String  @id @default(uuid())
+  eventoId String
+  nome     String
+  email    String
+  telefone String?
+  evento   Evento  @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+}
+
+model Avaliacao {
+  id        String   @id @default(uuid())
+  eventoId  String
+  usuarioId String
+  nota      Int      // 1-5 estrelas
+  comentario String?
+  createdAt DateTime @default(now())
+  
+  evento    Evento   @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id])
+
+  @@unique([eventoId, usuarioId])
+}
